@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System;
 using Litte.Enemy.Stats;
 using System.Linq;
+using LittleSword.Interfaces;
 
 
 namespace LittleSword.Enemy
@@ -58,7 +59,7 @@ namespace LittleSword.Enemy
             {
                 [typeof(Idlestate)] = new Idlestate(enemyStats.detecInterval),
                 [typeof(ChaseState)] = new ChaseState(enemyStats.detecInterval),
-                [typeof(AttackState)] = new AttackState()
+                [typeof(AttackState)] = new AttackState(enemyStats.attackCooldown)
             };
         }
 
@@ -144,6 +145,13 @@ namespace LittleSword.Enemy
 
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, enemyStats.attackDistance);
+        }
+
+        public void OnAttackAnimationEvent()
+        {
+            if(target == null) return;
+
+            target.GetComponent<IDamageable>()?.TakeDamage(enemyStats.attackDamage);
         }
     }
 }

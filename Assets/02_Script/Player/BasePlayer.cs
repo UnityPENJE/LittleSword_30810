@@ -60,6 +60,8 @@ namespace LittleSword.Player
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
             collider = GetComponent<Collider2D>();
+
+            CurrentHP = playerStats.maxHP;
         }
 
         protected virtual void Move(Vector2 direction)

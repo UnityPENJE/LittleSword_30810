@@ -29,6 +29,12 @@ namespace LittleSword.Enemy.FSM
             if (enemy.DetectPlayer())
             {
                 enemy.MoveToPlayer();
+
+                if (enemy.IsInAttackRange())
+                {
+                    enemy.StopMoving();
+                    enemy.ChangeState<AttackState>();
+                }
             }
             else
             {

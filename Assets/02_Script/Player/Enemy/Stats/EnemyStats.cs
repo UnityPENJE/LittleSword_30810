@@ -16,7 +16,7 @@ namespace Litte.Enemy.Stats
         [Header("Enemy Combat Stats")]
         public float chaseDistance = 5f;
         public float attackDistance = 1.5f;
-        public float attackDamage = 10f;
+        public int attackDamage = 10;
         public float attackCooldown = 1f;
     }
 }
