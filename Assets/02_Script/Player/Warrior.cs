@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace LittleSword.Player
 {
-    public class Warrior : MonoBehaviour
+    public class Warrior : BasePlayer
     {
 
     }

@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 2851603485021919028}
   - component: {fileID: 5339780449674674078}
   - component: {fileID: 2431700871266932475}
+  - component: {fileID: 4541275679077616181}
   m_Layer: 0
   m_Name: Goblin
   m_TagString: Untagged
@@ -28,7 +29,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: -1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -113,3 +114,20 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &4541275679077616181
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7493463822869012196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c906b035913089746b7a64bcbd345508, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LittleSword.Enemy.Enemy
+  stats: {fileID: 11400000, guid: b3852e50176616446bd15e07b19cd0c3, type: 2}
+  target: {fileID: 0}
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 8
