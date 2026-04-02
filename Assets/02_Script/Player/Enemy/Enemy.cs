@@ -6,11 +6,12 @@ using System;
 using Litte.Enemy.Stats;
 using System.Linq;
 using LittleSword.Interfaces;
+using LittleSword.Player;
 
 
 namespace LittleSword.Enemy
 {
-    public class Enemy : MonoBehaviour
+    public class Enemy : MonoBehaviour, IDamageable
     {
         private StateMachine stateMachine;
         public StateMachine StateMachine => stateMachine;
@@ -18,7 +19,7 @@ namespace LittleSword.Enemy
 
         private Dictionary<Type, IState> states;
 
-        [NonSerialized] Rigidbody2D rigidbody;
+        [NonSerialized] public Rigidbody2D rigidbody;
         [NonSerialized] public SpriteRenderer spriteRenderer;
         [NonSerialized] public Animator animator;
 
@@ -30,6 +31,14 @@ namespace LittleSword.Enemy
         [SerializeField] private EnemyStats enemyStats;
 
         [SerializeField] private Transform target;
+        
+        
+        public Transform Target => target;
+        
+        public bool IsDead => CurrentHP <= 0;
+
+        public int CurrentHP { get; private set; }
+
         public LayerMask playerLayer;
         
      
@@ -59,7 +68,8 @@ namespace LittleSword.Enemy
             {
                 [typeof(Idlestate)] = new Idlestate(enemyStats.detecInterval),
                 [typeof(ChaseState)] = new ChaseState(enemyStats.detecInterval),
-                [typeof(AttackState)] = new AttackState(enemyStats.attackCooldown)
+                [typeof(AttackState)] = new AttackState(enemyStats.attackCooldown),
+                [typeof(DieState)] = new DieState()
             };
         }
 
@@ -71,10 +81,13 @@ namespace LittleSword.Enemy
             rigidbody.freezeRotation = true;
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
+            CurrentHP = enemyStats.maxHP;
         }
 
+        //상태 전환 메서드
         public void ChangeState<T>() where T : IState
         {
+            if (IsDead && typeof(T) != typeof(DieState)) return;
             if(states.TryGetValue(typeof(T), out IState newstate))
             {
                 stateMachine.ChangeState(newstate);
@@ -90,6 +103,7 @@ namespace LittleSword.Enemy
             {
                 target = colliders
                     .OrderBy(c => (transform.position - c.transform.position).sqrMagnitude)
+                    .Where(c=>c.GetComponent<BasePlayer>()?.IsDead == false)
                     .First()
                     .transform;
 
@@ -104,9 +118,18 @@ namespace LittleSword.Enemy
         {
             if(target == null) return;
 
+            SetFacing();
+
             Vector2 direction = (target.position - transform.position).normalized;
-            spriteRenderer.flipX = direction.x < 0;
+            
             rigidbody.linearVelocity = direction * enemyStats.moveSpeed;
+        }
+
+        public void SetFacing()
+        {
+            if(spriteRenderer == null) return;
+            Vector2 dir = target.position - transform.position;
+            spriteRenderer.flipX = dir.x < 0;
         }
 
         public void StopMoving()
@@ -152,6 +175,26 @@ namespace LittleSword.Enemy
             if(target == null) return;
 
             target.GetComponent<IDamageable>()?.TakeDamage(enemyStats.attackDamage);
+        }
+
+        public void TakeDamage(int damage)
+        {
+            if(IsDead) return;
+            CurrentHP -= damage;
+            if (IsDead)
+            {
+                Die();
+            }
+            else
+            {
+                animator.SetTrigger(hashHit);
+            }
+        }
+
+        public void Die()
+        {
+            // animator.SetTrigger(hashDie);
+            ChangeState<DieState>(); // 죽은 상태 전환
         }
     }
 }

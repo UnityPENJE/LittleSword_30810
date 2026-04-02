@@ -162,7 +162,7 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 989479452788881539}
-  m_BodyType: 0
+  m_BodyType: 1
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
@@ -194,6 +194,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LittleSword.Player.Warrior
   playerStats: {fileID: 11400000, guid: c76add82553cd7248ad1c9bceb8ba879, type: 2}
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  size: {x: 1, y: 2}
+  offset: 0.5
 --- !u!114 &3218239627978063021
 MonoBehaviour:
   m_ObjectHideFlags: 0
