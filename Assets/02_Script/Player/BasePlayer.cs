@@ -2,6 +2,7 @@ using LittleSword.Controller;
 using LittleSword.InputSystem;
 using UnityEngine;
 using LittleSword.Interfaces;
+using Unity.VisualScripting;
 
 
 namespace LittleSword.Player
@@ -23,6 +24,7 @@ namespace LittleSword.Player
         protected Collider2D collider;
 
         public PlayerStats playerStats;
+        private float nextAttackTime = 0f;
 
         public bool IsDead => CurrentHP <= 0;
         public int CurrentHP { get; set; }
@@ -61,6 +63,11 @@ namespace LittleSword.Player
             animator = GetComponent<Animator>();
             collider = GetComponent<Collider2D>();
 
+            // 2D 수평 이동만 가능하도록 설정
+            rigidBody.gravityScale = 0;
+            // Rigidbody2D 회전 고정
+            rigidBody.freezeRotation = true;
+
             CurrentHP = playerStats.maxHP;
         }
 
@@ -73,7 +80,12 @@ namespace LittleSword.Player
 
         protected virtual void Attack()
         {
-            animationController.Attack();
+            if (Time.time >= nextAttackTime)
+            {
+                animationController.Attack();
+                nextAttackTime = Time.time + playerStats.Attackcooldwon;
+            }
+                
         }
 
         public void TakeDamage(int damage)

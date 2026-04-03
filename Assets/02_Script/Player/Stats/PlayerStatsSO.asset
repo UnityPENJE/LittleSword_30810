@@ -15,3 +15,5 @@ MonoBehaviour:
   maxHP: 100
   moveSpeed: 5
   attackDamage: 20
+  fireForce: 10
+  Attackcooldwon: 0.5
