@@ -87,14 +87,12 @@ namespace LittleSword.Network
         private void OnServerStoppedCallback(bool obj)
         {
             Logger.Log("서버 종료");
-
         }
 
         // 클라이언트가 시작됐을 때 호출되는 콜백
         private void OnClientStartedCallback()
         {
             Logger.Log("클라이언트 시작");
-
         }
 
         // 서버 버튼 클릭 시 호출 - 서버로만 동작 (화면 없이 게임 관리만)
