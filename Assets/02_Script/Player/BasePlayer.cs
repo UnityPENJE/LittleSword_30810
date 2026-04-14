@@ -1,7 +1,10 @@
+using System;
 using LittleSword.Controller;
 using LittleSword.InputSystem;
 using UnityEngine;
 using LittleSword.Interfaces;
+using LittleSword.Effects;
+using LittleSword.UI;
 using Unity.VisualScripting;
 
 
@@ -46,6 +49,12 @@ namespace LittleSword.Player
         // 충돌 감지 영역
         protected Collider2D collider;
 
+        // 피격 시 스프라이트 깜빡임 효과
+        private HitFlash hitFlash;
+
+        // 대시(회피) 컨트롤러
+        private DashController dashController;
+
         // ─── 스탯 & 상태 ─────────────────────────────────────────
         // ScriptableObject로 만든 플레이어 능력치 데이터
         public PlayerStats playerStats;
@@ -59,6 +68,10 @@ namespace LittleSword.Player
 
         // 현재 체력 (set은 public으로 BasePlayerEditor에서 수정 가능)
         public int CurrentHP { get; set; }
+
+        // HP가 변경되었을 때 발생하는 이벤트 (현재HP, 최대HP)
+        // HP Bar UI 등에서 구독해서 체력 변화를 감지
+        public event Action<int, int> OnHPChanged;
 
         // ─── 유니티 생명주기 함수 ────────────────────────────────
 
@@ -75,6 +88,7 @@ namespace LittleSword.Player
         {
             inputHandler.OnMove += Move;     // 이동 입력 → Move 함수 연결
             inputHandler.OnAttack += Attack; // 공격 입력 → Attack 함수 연결
+            inputHandler.OnDash += OnDash;   // 대시 입력 → 대시 실행 연결
         }
 
         // OnDisable: 오브젝트가 비활성화될 때 호출
@@ -83,6 +97,7 @@ namespace LittleSword.Player
         {
             inputHandler.OnMove -= Move;
             inputHandler.OnAttack -= Attack;
+            inputHandler.OnDash -= OnDash;
         }
 
         // 컨트롤러 클래스들을 초기화 (유니티 컴포넌트가 먼저 있어야 해서 InitComponents 다음에 호출)
@@ -104,6 +119,9 @@ namespace LittleSword.Player
             animator = GetComponent<Animator>();
             collider = GetComponent<Collider2D>();
 
+            hitFlash = GetComponent<HitFlash>();
+            dashController = GetComponent<DashController>();
+
             // 2D 탑다운 게임이라 중력 없이 이동하도록 중력 끔
             rigidBody.gravityScale = 0;
 
@@ -112,6 +130,9 @@ namespace LittleSword.Player
 
             // 게임 시작 시 HP를 최대 체력으로 설정
             CurrentHP = playerStats.maxHP;
+
+            // HP 초기값을 이벤트로 알려줌 (HP Bar 초기화용)
+            OnHPChanged?.Invoke(CurrentHP, playerStats.maxHP);
         }
 
         // ─── 주요 기능 함수 ──────────────────────────────────────
@@ -122,6 +143,9 @@ namespace LittleSword.Player
         {
             // Rigidbody에 직접 속도를 설정해서 이동
             rigidBody.linearVelocity = direction * 3.0f;
+
+            // 대시 컨트롤러에 현재 이동 방향 전달 (대시 방향으로 사용)
+            dashController?.SetMoveDirection(direction);
 
             // MovementController에도 이동 처리 위임 (스프라이트 방향 전환 포함)
             movementController.Move(direction, playerStats.moveSpeed);
@@ -150,8 +174,17 @@ namespace LittleSword.Player
             // 이미 죽어있으면 피해 무시
             if (IsDead) return;
 
+            // 대시 중 무적 상태면 피해 무시
+            if (dashController != null && dashController.IsInvincible) return;
+
             // HP를 깎되, 최소값은 0 (음수 방지)
             CurrentHP = Mathf.Max(0, CurrentHP - damage);
+
+            // HP 변경 이벤트 발생 (HP Bar 갱신용)
+            OnHPChanged?.Invoke(CurrentHP, playerStats.maxHP);
+
+            // 데미지 팝업 표시
+            DamagePopupSpawner.Instance?.Spawn(transform.position, damage);
 
             if (IsDead)
             {
@@ -160,7 +193,27 @@ namespace LittleSword.Player
             else
             {
                 animationController.Hit(); // 살아있으면 피격 애니메이션 재생
+
+                // 피격 이펙트: 카메라 흔들림 + 스프라이트 깜빡임
+                CameraShake.Instance?.Shake();
+                hitFlash?.Flash();
             }
+        }
+
+        // 대시 입력 처리
+        private void OnDash()
+        {
+            dashController?.TriggerDash();
+        }
+
+        // 체력 회복 함수 (아이템 등에서 호출)
+        // amount만큼 HP를 회복하되, 최대 HP를 초과하지 않음
+        public void Heal(int amount)
+        {
+            if (IsDead) return;
+
+            CurrentHP = Mathf.Min(CurrentHP + amount, playerStats.maxHP);
+            OnHPChanged?.Invoke(CurrentHP, playerStats.maxHP);
         }
 
         // 사망 처리

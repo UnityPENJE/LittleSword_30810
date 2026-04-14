@@ -1,5 +1,6 @@
 using UnityEngine;
 using LittleSword.Enemy.FSM;
+using LittleSword.Effects;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System;
@@ -7,6 +8,7 @@ using Litte.Enemy.Stats;
 using System.Linq;
 using LittleSword.Interfaces;
 using LittleSword.Player;
+using LittleSword.UI;
 
 
 namespace LittleSword.Enemy
@@ -58,6 +60,10 @@ namespace LittleSword.Enemy
 
         // ─── 스탯 & 상태 ─────────────────────────────────────────
         [SerializeField] private EnemyStats enemyStats; // 적 능력치 ScriptableObject
+        public EnemyStats EnemyStats => enemyStats; // 외부 읽기 전용
+
+        // 피격 깜빡임 효과
+        private HitFlash hitFlash;
 
         // 추격/공격 대상 플레이어 Transform
         [SerializeField] private Transform target;
@@ -66,6 +72,10 @@ namespace LittleSword.Enemy
         // IDamageable 구현
         public bool IsDead => CurrentHP <= 0;
         public int CurrentHP { get; private set; } // Enemy 내부에서만 변경 가능
+        public int MaxHP => enemyStats.maxHP; // 최대 HP 외부 접근용
+
+        // HP가 변경되었을 때 발생하는 이벤트 (현재HP, 최대HP)
+        public event Action<int, int> OnHPChanged;
 
         // 플레이어가 속한 레이어 (OverlapCircle로 감지할 때 이 레이어만 탐색)
         public LayerMask playerLayer;
@@ -119,9 +129,13 @@ namespace LittleSword.Enemy
 
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
+            hitFlash = GetComponent<HitFlash>();
 
             // 시작 시 HP를 최대값으로 설정
             CurrentHP = enemyStats.maxHP;
+
+            // HP 초기값 이벤트 발생 (HP Bar 초기화용)
+            OnHPChanged?.Invoke(CurrentHP, enemyStats.maxHP);
         }
 
         // ─── 상태 전환 ────────────────────────────────────────────
@@ -246,6 +260,12 @@ namespace LittleSword.Enemy
 
             CurrentHP -= damage;
 
+            // HP 변경 이벤트 발생 (HP Bar 갱신용)
+            OnHPChanged?.Invoke(CurrentHP, enemyStats.maxHP);
+
+            // 데미지 팝업 표시
+            DamagePopupSpawner.Instance?.Spawn(transform.position, damage);
+
             if (IsDead)
             {
                 Die(); // HP가 0 이하면 사망
@@ -253,6 +273,7 @@ namespace LittleSword.Enemy
             else
             {
                 animator.SetTrigger(hashHit); // 살아있으면 피격 애니메이션
+                hitFlash?.Flash(); // 피격 깜빡임 효과
             }
         }
 

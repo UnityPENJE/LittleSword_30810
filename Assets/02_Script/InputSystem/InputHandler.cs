@@ -23,6 +23,8 @@ namespace LittleSword.InputSystem
         // event: 이 클래스 밖에서는 구독(+=)만 할 수 있고, 직접 발동(Invoke)은 못해
         public event Action<Vector2> OnMove;    // 이동 입력 이벤트
         public event Action OnAttack;           // 공격 입력 이벤트
+        public event Action OnDash;             // 대시(회피) 입력 이벤트
+        public event Action OnSkill;            // 스킬 입력 이벤트
 
         // 유니티 Input System이 자동 생성한 액션 클래스 (InputSystem_Actions.cs)
         private InputSystem_Actions inputActions;
@@ -33,6 +35,12 @@ namespace LittleSword.InputSystem
         // 공격 액션 (마우스 클릭, 특정 버튼 등)
         private InputAction attackAction;
 
+        // 대시(회피) 액션 (스페이스바)
+        private InputAction dashAction;
+
+        // 스킬 액션 (Q키 또는 Interact)
+        private InputAction skillAction;
+
         // Awake: 게임 오브젝트가 처음 생성될 때 딱 한 번 호출됨 (Start보다 먼저!)
         private void Awake()
         {
@@ -42,6 +50,10 @@ namespace LittleSword.InputSystem
             // 플레이어 액션 맵에서 이동/공격 액션을 가져옴
             moveAction = inputActions.Player.Move;
             attackAction = inputActions.Player.Attack;
+
+            // Jump(스페이스바)를 대시로 사용, Interact를 스킬로 사용
+            dashAction = inputActions.Player.Jump;
+            skillAction = inputActions.Player.Interact;
         }
 
         // OnEnable: 이 컴포넌트가 활성화될 때 호출됨 (게임 오브젝트가 켜질 때 등)
@@ -55,6 +67,12 @@ namespace LittleSword.InputSystem
 
             // 공격 입력이 들어올 때 HandleAttack 실행
             attackAction.performed += HandleAttack;
+
+            // 대시 입력 (스페이스바)
+            dashAction.performed += HandleDash;
+
+            // 스킬 입력 (Interact 키)
+            skillAction.performed += HandleSkill;
         }
 
         // OnDisable: 이 컴포넌트가 비활성화될 때 호출됨
@@ -66,6 +84,8 @@ namespace LittleSword.InputSystem
             // += 로 연결했으면 -= 로 반드시 해제!
             moveAction.performed -= HandleMove;
             attackAction.performed -= HandleAttack;
+            dashAction.performed -= HandleDash;
+            skillAction.performed -= HandleSkill;
         }
 
         // 이동 입력이 들어왔을 때 실제로 처리하는 함수
@@ -86,6 +106,18 @@ namespace LittleSword.InputSystem
 
             // OnAttack을 구독한 곳이 있으면 이벤트를 발동시킴
             OnAttack?.Invoke();
+        }
+
+        // 대시 입력이 들어왔을 때 처리하는 함수
+        private void HandleDash(InputAction.CallbackContext obj)
+        {
+            OnDash?.Invoke();
+        }
+
+        // 스킬 입력이 들어왔을 때 처리하는 함수
+        private void HandleSkill(InputAction.CallbackContext obj)
+        {
+            OnSkill?.Invoke();
         }
     }
 }

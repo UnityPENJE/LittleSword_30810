@@ -36,5 +36,9 @@ namespace Litte.Enemy.Stats
 
         // 공격 쿨다운: 공격 후 다시 공격하기까지 기다리는 시간(초)
         public float attackCooldown = 1f;
+
+        [Header("Enemy Reward Stats")] // --- 보상 관련 스탯 ---
+        // 처치 시 플레이어에게 주는 경험치
+        public int expReward = 20;
     }
 }

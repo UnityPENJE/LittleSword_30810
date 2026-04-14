@@ -1,4 +1,5 @@
 using UnityEngine;
+using LittleSword.Player;
 
 namespace LittleSword.Enemy.FSM
 {
@@ -34,6 +35,15 @@ namespace LittleSword.Enemy.FSM
             // Kinematic 모드: 물리 엔진의 영향을 받지 않게 함
             // (중력, 충돌 반응 등이 사라짐)
             enemy.rigidbody.bodyType = RigidbodyType2D.Kinematic;
+
+            // 플레이어에게 경험치 지급
+            // FindObjectOfType: 씬에서 BasePlayer를 가진 오브젝트를 찾음
+            BasePlayer player = Object.FindObjectOfType<BasePlayer>();
+            if (player != null)
+            {
+                LevelSystem levelSystem = player.GetComponent<LevelSystem>();
+                levelSystem?.AddXP(enemy.EnemyStats.expReward);
+            }
 
             // 5초 후 이 게임 오브젝트를 씬에서 완전히 제거
             // Object.Destroy(오브젝트, 딜레이): 딜레이(초) 후에 삭제
