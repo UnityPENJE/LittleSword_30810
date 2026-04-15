@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: 8532370232996652807}
   - component: {fileID: -2280282756841057051}
   - component: {fileID: -8005746348905656893}
+  - component: {fileID: 7155484482753269744}
   m_Layer: 3
   m_Name: Warrior
   m_TagString: Untagged
@@ -316,3 +317,18 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   TransitionStateInfoList: []
   m_Animator: {fileID: 1141044676615447543}
+--- !u!114 &7155484482753269744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 989479452788881539}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0fdb72358bb20bd47ac87e4f5f5b0e30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LittleSword.Effects.Knockback
+  defaultForce: 6
+  duration: 0.12
+  isInvincibleDuringKnockback: 0

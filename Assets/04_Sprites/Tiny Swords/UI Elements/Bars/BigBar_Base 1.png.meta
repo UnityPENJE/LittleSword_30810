@@ -1,12 +1,5 @@
 fileFormatVersion: 2
-guid: 1ca4a275fe6be46b2a13d0ebc1503219
-AssetOrigin:
-  serializedVersion: 1
-  productId: 352566
-  packageName: Tiny Swords
-  packageVersion: 1.0
-  assetPath: Assets/Tiny Swords/UI Elements/Bars/BigBar_Base.png
-  uploadId: 844324
+guid: 6f0649631c8cf05419eb97013e8cfca7
 TextureImporter:
   internalIDToNameTable:
   - first:

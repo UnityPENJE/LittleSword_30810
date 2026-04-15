@@ -1,12 +1,13 @@
-using UnityEngine;
-using LittleSword.Enemy.FSM;
-using UnityEngine.InputSystem;
-using System.Collections.Generic;
-using System;
 using Litte.Enemy.Stats;
-using System.Linq;
+using LittleSword.Effects;
+using LittleSword.Enemy.FSM;
 using LittleSword.Interfaces;
 using LittleSword.Player;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
 
 namespace LittleSword.Enemy
@@ -66,6 +67,7 @@ namespace LittleSword.Enemy
         // IDamageable 구현
         public bool IsDead => CurrentHP <= 0;
         public int CurrentHP { get; private set; } // Enemy 내부에서만 변경 가능
+        public Action<int, int> OnHPChanged { get; internal set; }
 
         // 플레이어가 속한 레이어 (OverlapCircle로 감지할 때 이 레이어만 탐색)
         public LayerMask playerLayer;
@@ -237,6 +239,7 @@ namespace LittleSword.Enemy
 
             // 타겟에 IDamageable이 있으면 데미지 적용
             target.GetComponent<IDamageable>()?.TakeDamage(enemyStats.attackDamage);
+            CameraShake.Instance?.Shake();
         }
 
         // IDamageable 인터페이스 구현: 피해 받기

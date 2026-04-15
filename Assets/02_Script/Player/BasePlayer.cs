@@ -1,102 +1,76 @@
 using LittleSword.Controller;
+using LittleSword.Effects;
 using LittleSword.InputSystem;
-using UnityEngine;
 using LittleSword.Interfaces;
+using System;
 using Unity.VisualScripting;
+using UnityEngine;
+using UnityEngine.UI;   // ← 추가
 
 
 namespace LittleSword.Player
 {
-    // ============================================================
-    // BasePlayer: 플레이어 캐릭터의 기반(공통) 클래스
-    // ============================================================
-    // 게임에는 전사(Warrior), 궁수(Archer) 등 여러 직업이 있어.
-    // 이들은 공통으로 이동, 공격, 피해 받기 같은 기능을 갖고 있어.
-    // 그 공통 기능을 여기 BasePlayer에 모아놨어!
-    //
-    // Warrior와 Archer는 BasePlayer를 상속(: BasePlayer)받아서
-    // 공통 기능은 그대로 물려받고, 직업별 특수 공격만 추가로 구현하면 돼.
-    //
-    // MonoBehaviour = 유니티 게임 오브젝트에 붙이는 스크립트 기본 클래스
-    // IDamageable = 피해를 받을 수 있음을 보장하는 인터페이스
-    // ============================================================
     public class BasePlayer : MonoBehaviour, IDamageable
     {
         // ─── 컨트롤러 ───────────────────────────────────────────
-        // 입력을 받는 컴포넌트 (키보드/패드 입력 감지)
         private InputHandler inputHandler;
-
-        // 이동 처리 전용 컨트롤러 (속도, 방향 전환 처리)
-        // protected = 이 클래스와 자식 클래스(Warrior, Archer)에서만 접근 가능
         protected MovementController movementController;
-
-        // 애니메이션 전환 전용 컨트롤러 (달리기, 공격, 피격 등)
         private AnimationController animationController;
 
         // ─── 유니티 컴포넌트 ─────────────────────────────────────
-        // 물리 처리 (이동, 충돌 등)
         protected Rigidbody2D rigidBody;
-
-        // 스프라이트 이미지 렌더링 (좌우 반전 등)
         protected SpriteRenderer spriteRenderer;
-
-        // 애니메이션 재생
         protected Animator animator;
-
-        // 충돌 감지 영역
         protected Collider2D collider;
 
         // ─── 스탯 & 상태 ─────────────────────────────────────────
-        // ScriptableObject로 만든 플레이어 능력치 데이터
         public PlayerStats playerStats;
-
-        // 다음 공격이 가능한 시간 (쿨다운 계산용)
         private float nextAttackTime = 0f;
 
-        // IDamageable 인터페이스 구현:
-        // => 표현식: CurrentHP가 0 이하면 IsDead = true
         public bool IsDead => CurrentHP <= 0;
-
-        // 현재 체력 (set은 public으로 BasePlayerEditor에서 수정 가능)
         public int CurrentHP { get; set; }
+        public Action<int, int> OnHPChanged { get; internal set; }
 
-        // ─── 유니티 생명주기 함수 ────────────────────────────────
+        // ─── HP 바 UI (인스펙터에서 Fill Image 드래그) ───────────
+        [Header("HP 바 UI")]
+        [SerializeField] private Image hpFillImage;       // HPBar_Fill 드래그
+        [SerializeField] private float hpLerpSpeed = 5f;  // 부드럽게 감소하는 속도
+        private float targetHpFill = 1f;
 
-        // Awake: 오브젝트가 생성될 때 가장 먼저 호출 (Start보다 먼저)
+        // ─── 유니티 생명주기 ─────────────────────────────────────
+
         protected void Awake()
         {
-            InitComponents(); // 유니티 컴포넌트 초기화
-            InitControllers(); // 입력/이동/애니메이션 컨트롤러 초기화
+            InitComponents();
+            InitControllers();
         }
 
-        // OnEnable: 오브젝트가 활성화될 때 호출
-        // 입력 이벤트를 구독해서 키 입력을 받기 시작
         protected void OnEnable()
         {
-            inputHandler.OnMove += Move;     // 이동 입력 → Move 함수 연결
-            inputHandler.OnAttack += Attack; // 공격 입력 → Attack 함수 연결
+            inputHandler.OnMove += Move;
+            inputHandler.OnAttack += Attack;
         }
 
-        // OnDisable: 오브젝트가 비활성화될 때 호출
-        // 이벤트 구독을 해제해서 메모리 누수 방지
         protected void OnDisable()
         {
             inputHandler.OnMove -= Move;
             inputHandler.OnAttack -= Attack;
         }
 
-        // 컨트롤러 클래스들을 초기화 (유니티 컴포넌트가 먼저 있어야 해서 InitComponents 다음에 호출)
+        // HP 바를 매 프레임 부드럽게 갱신
+        private void Update()
+        {
+            if (hpFillImage != null)
+                hpFillImage.fillAmount = Mathf.Lerp(hpFillImage.fillAmount, targetHpFill, Time.deltaTime * hpLerpSpeed);
+        }
+
         private void InitControllers()
         {
-            // 같은 게임 오브젝트에서 InputHandler 컴포넌트를 찾아 가져옴
             inputHandler = GetComponent<InputHandler>();
-
-            // MovementController는 MonoBehaviour가 아닌 일반 클래스라서 new로 생성
             movementController = new MovementController(rigidBody, spriteRenderer);
             animationController = new AnimationController(animator);
         }
 
-        // 유니티 컴포넌트들을 찾아서 변수에 저장
         private void InitComponents()
         {
             rigidBody = GetComponent<Rigidbody2D>();
@@ -104,73 +78,67 @@ namespace LittleSword.Player
             animator = GetComponent<Animator>();
             collider = GetComponent<Collider2D>();
 
-            // 2D 탑다운 게임이라 중력 없이 이동하도록 중력 끔
             rigidBody.gravityScale = 0;
-
-            // 물리 충돌로 인해 캐릭터가 회전하지 않도록 고정
             rigidBody.freezeRotation = true;
 
-            // 게임 시작 시 HP를 최대 체력으로 설정
+            // HP 초기화
             CurrentHP = playerStats.maxHP;
+            targetHpFill = 1f;
+            if (hpFillImage != null) hpFillImage.fillAmount = 1f;
         }
 
         // ─── 주요 기능 함수 ──────────────────────────────────────
 
-        // 이동 처리 - 입력된 방향으로 캐릭터를 움직임
-        // virtual: 자식 클래스(Warrior, Archer)에서 이 함수를 재정의(override) 할 수 있어
         protected virtual void Move(Vector2 direction)
         {
-            // Rigidbody에 직접 속도를 설정해서 이동
             rigidBody.linearVelocity = direction * 3.0f;
-
-            // MovementController에도 이동 처리 위임 (스프라이트 방향 전환 포함)
             movementController.Move(direction, playerStats.moveSpeed);
-
-            // 이동 중이면 달리기 애니메이션, 멈추면 대기 애니메이션으로 전환
             animationController.Move(direction != Vector2.zero);
         }
 
-        // 공격 처리 - 쿨다운이 끝났을 때만 공격 가능
         protected virtual void Attack()
         {
-            // Time.time: 게임 시작 후 경과된 시간(초)
-            // nextAttackTime 이상이 되면 공격 가능
             if (Time.time >= nextAttackTime)
             {
-                animationController.Attack(); // 공격 애니메이션 재생
-
-                // 다음 공격 가능 시간 = 현재 시간 + 쿨다운
+                animationController.Attack();
                 nextAttackTime = Time.time + playerStats.Attackcooldwon;
             }
         }
 
-        // IDamageable 인터페이스 구현: 피해를 받는 함수
         public void TakeDamage(int damage)
         {
-            // 이미 죽어있으면 피해 무시
             if (IsDead) return;
 
-            // HP를 깎되, 최소값은 0 (음수 방지)
             CurrentHP = Mathf.Max(0, CurrentHP - damage);
+
+            // HP 바 목표값 갱신 (Update에서 부드럽게 줄어듦)
+            targetHpFill = (float)CurrentHP / playerStats.maxHP;
 
             if (IsDead)
             {
-                Die(); // HP가 0이 되면 사망 처리
+                Die();
             }
             else
             {
-                animationController.Hit(); // 살아있으면 피격 애니메이션 재생
+                CameraShake.Instance?.Shake();
+                animationController.Hit();
             }
         }
 
-        // 사망 처리
+        // 체력 회복 (필요할 때 사용)
+        public void Heal(int amount)
+        {
+            if (IsDead) return;
+            CurrentHP = Mathf.Min(CurrentHP + amount, playerStats.maxHP);
+            targetHpFill = (float)CurrentHP / playerStats.maxHP;
+        }
+
         void Die()
         {
-            animationController.Die(); // 사망 애니메이션 재생
-
-            inputHandler.enabled = false;          // 더 이상 입력 받지 않음
-            collider.enabled = false;              // 충돌 비활성화 (적이 뚫고 지나갈 수 있게)
-            rigidBody.linearVelocity = Vector2.zero; // 이동 멈춤
+            animationController.Die();
+            inputHandler.enabled = false;
+            collider.enabled = false;
+            rigidBody.linearVelocity = Vector2.zero;
         }
     }
 }
