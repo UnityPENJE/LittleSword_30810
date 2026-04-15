@@ -22,11 +22,5 @@ namespace LittleSword.InputSystem
 
         // 공격 입력 이벤트: 플레이어가 공격 버튼을 누르면 호출됨
         event Action OnAttack;
-
-        // 대시 입력 이벤트: 플레이어가 대시(회피) 버튼을 누르면 호출됨
-        event Action OnDash;
-
-        // 스킬 입력 이벤트: 플레이어가 스킬 버튼을 누르면 호출됨
-        event Action OnSkill;
     }
 }
