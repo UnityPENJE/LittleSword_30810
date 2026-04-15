@@ -6,6 +6,7 @@ using System;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;   // ← 추가
+using UnityEngine.SceneManagement;
 
 
 namespace LittleSword.Player
@@ -163,6 +164,9 @@ namespace LittleSword.Player
             inputHandler.enabled = false;
             collider.enabled = false;
             rigidBody.linearVelocity = Vector2.zero;
+            string currentSceneName = SceneManager.GetActiveScene().name;
+            SceneManager.LoadScene(currentSceneName);
+
         }
     }
 }

@@ -24,7 +24,7 @@ namespace LittleSword.Player
 
         private void Awake()
         {
-            player = GetComponent<BasePlayer>();
+            player = GetComponentInParent<BasePlayer>();
             parryEffect.SetActive(false);
             if (cooldownImage) cooldownImage.fillAmount = 0f;
             if (flashImage) flashImage.color = new Color(1, 1, 1, 0);

@@ -165,6 +165,7 @@ GameObject:
   - component: {fileID: 6867200888328659247}
   - component: {fileID: 2437351782569515370}
   - component: {fileID: 6120622037317860246}
+  - component: {fileID: -2496072619366806155}
   m_Layer: 6
   m_Name: Boss
   m_TagString: Enemy
@@ -281,6 +282,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LittleSword.Enemy.Enemy
   hpBar: {fileID: 3367920190149389252}
+  goldReward: 20
+  clearUI: {fileID: 0}
   enemyStats: {fileID: 11400000, guid: 81d11c1ce6a58354ab0f1045eda73fad, type: 2}
   target: {fileID: 0}
   playerLayer:
@@ -364,6 +367,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LittleSword.UI.DamageTextSpawner
   damageTextPrefab: {fileID: 663848676489080341, guid: 9e0a975420e0d534485e583d0ff9ebe4, type: 3}
   offset: {x: 0, y: 0.5, z: 0}
+--- !u!114 &-2496072619366806155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7493463822869012196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f113bacd282e832499b83be918e525e5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LittleSword.BossClear
+  clearUI: {fileID: 0}
 --- !u!1 &7957999657697039452
 GameObject:
   m_ObjectHideFlags: 0

@@ -50,7 +50,9 @@ namespace LittleSword.Enemy
         [NonSerialized] public SpriteRenderer spriteRenderer;
         [NonSerialized] public Animator animator;
         [SerializeField] private EnemyHPBar hpBar;
-        
+        [SerializeField] private int goldReward = 10;
+        [SerializeField] private GameObject clearUI;
+
 
         // ─── 애니메이터 파라미터 해시 ────────────────────────────
         // static = 모든 Enemy 인스턴스가 공유 (메모리 절약)
@@ -273,6 +275,12 @@ namespace LittleSword.Enemy
         // 사망 처리: DieState로 전환
         public void Die()
         {
+            if (gameObject.CompareTag("Boss"))
+            {
+                clearUI?.SetActive(true);
+            }
+            
+            CurrencyManager.Instance?.Add(goldReward);
             ChangeState<DieState>(); // DieState에서 애니메이션, 충돌 비활성화, 오브젝트 제거 처리
         }
     }

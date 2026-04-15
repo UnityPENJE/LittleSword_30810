@@ -5,8 +5,8 @@ namespace LittleSword.UI
 {
     public class SceneController : MonoBehaviour
     {
-        public void LoadScene(string sceneName) => SceneManager.LoadScene(sceneName);
-        public void LoadScene(int sceneIndex) => SceneManager.LoadScene(sceneIndex);
+        public void LoadScene(string sceneName) => SceneFader.Instance.LoadScene(sceneName);
+        public void LoadScene(int index) => SceneFader.Instance.LoadScene(index);
         public void QuitGame()
         {
 #if UNITY_EDITOR

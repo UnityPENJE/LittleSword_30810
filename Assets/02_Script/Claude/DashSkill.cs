@@ -27,9 +27,9 @@ namespace LittleSword.Player
 
         private void Awake()
         {
-            player = GetComponent<BasePlayer>();
-            rb = GetComponent<Rigidbody2D>();
-            sr = GetComponent<SpriteRenderer>();
+            player = GetComponentInParent<BasePlayer>();
+            rb = GetComponentInParent<Rigidbody2D>();
+            sr = GetComponentInParent<SpriteRenderer>();
             if (cooldownImage) cooldownImage.fillAmount = 0f;
         }
 
@@ -88,7 +88,7 @@ namespace LittleSword.Player
         {
             // 스프라이트 복사해서 잔상 생성
             GameObject obj = new GameObject("AfterImage");
-            obj.transform.position = transform.position;
+            obj.transform.position = player.transform.position;
             obj.transform.rotation = transform.rotation;
             obj.transform.localScale = transform.localScale;
 
