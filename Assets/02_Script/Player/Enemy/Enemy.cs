@@ -3,6 +3,7 @@ using LittleSword.Effects;
 using LittleSword.Enemy.FSM;
 using LittleSword.Interfaces;
 using LittleSword.Player;
+using LittleSword.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -48,6 +49,8 @@ namespace LittleSword.Enemy
         [NonSerialized] public Rigidbody2D rigidbody;
         [NonSerialized] public SpriteRenderer spriteRenderer;
         [NonSerialized] public Animator animator;
+        [SerializeField] private EnemyHPBar hpBar;
+        
 
         // ─── 애니메이터 파라미터 해시 ────────────────────────────
         // static = 모든 Enemy 인스턴스가 공유 (메모리 절약)
@@ -59,6 +62,7 @@ namespace LittleSword.Enemy
 
         // ─── 스탯 & 상태 ─────────────────────────────────────────
         [SerializeField] private EnemyStats enemyStats; // 적 능력치 ScriptableObject
+        private DamageTextSpawner damageTextSpawner;
 
         // 추격/공격 대상 플레이어 Transform
         [SerializeField] private Transform target;
@@ -105,6 +109,7 @@ namespace LittleSword.Enemy
                 [typeof(ChaseState)]  = new ChaseState(enemyStats.detecInterval),
                 [typeof(AttackState)] = new AttackState(enemyStats.attackCooldown),
                 [typeof(DieState)]    = new DieState()
+
             };
         }
 
@@ -112,6 +117,7 @@ namespace LittleSword.Enemy
         private void InitComponents()
         {
             rigidbody = GetComponent<Rigidbody2D>();
+            damageTextSpawner = GetComponent<DamageTextSpawner>();
 
             // 2D 탑다운 게임이라 중력 없이 이동
             rigidbody.gravityScale = 0;
@@ -248,13 +254,18 @@ namespace LittleSword.Enemy
             if (IsDead) return; // 이미 죽었으면 무시
 
             CurrentHP -= damage;
+            hpBar?.Show(CurrentHP, enemyStats.maxHP);
+            damageTextSpawner?.Spawn(damage);
 
             if (IsDead)
             {
                 Die(); // HP가 0 이하면 사망
+                hpBar?.Hide();
             }
             else
             {
+                
+                Debug.Log(" Enemy발동됨");
                 animator.SetTrigger(hashHit); // 살아있으면 피격 애니메이션
             }
         }

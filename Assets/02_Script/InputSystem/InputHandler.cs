@@ -33,6 +33,8 @@ namespace LittleSword.InputSystem
         // 공격 액션 (마우스 클릭, 특정 버튼 등)
         private InputAction attackAction;
 
+        public Vector2 CurrentMoveDirection => moveAction.ReadValue<Vector2>();
+
         // Awake: 게임 오브젝트가 처음 생성될 때 딱 한 번 호출됨 (Start보다 먼저!)
         private void Awake()
         {

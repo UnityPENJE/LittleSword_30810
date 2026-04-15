@@ -17,6 +17,7 @@ namespace LittleSword.Player
         protected MovementController movementController;
         private AnimationController animationController;
 
+
         // ─── 유니티 컴포넌트 ─────────────────────────────────────
         protected Rigidbody2D rigidBody;
         protected SpriteRenderer spriteRenderer;
@@ -30,6 +31,9 @@ namespace LittleSword.Player
         public bool IsDead => CurrentHP <= 0;
         public int CurrentHP { get; set; }
         public Action<int, int> OnHPChanged { get; internal set; }
+        public bool IsInvincible { get; set; } = false;
+        private ParrySkill parrySkill;
+        public bool CanMove { get; set; } = true;
 
         // ─── HP 바 UI (인스펙터에서 Fill Image 드래그) ───────────
         [Header("HP 바 UI")]
@@ -62,6 +66,14 @@ namespace LittleSword.Player
         {
             if (hpFillImage != null)
                 hpFillImage.fillAmount = Mathf.Lerp(hpFillImage.fillAmount, targetHpFill, Time.deltaTime * hpLerpSpeed);
+
+            if (CanMove)
+            {
+                Vector2 dir = inputHandler.CurrentMoveDirection;
+                rigidBody.linearVelocity = dir * playerStats.moveSpeed;
+                movementController.Move(dir, playerStats.moveSpeed);
+                animationController.Move(dir != Vector2.zero);
+            }
         }
 
         private void InitControllers()
@@ -77,6 +89,7 @@ namespace LittleSword.Player
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
             collider = GetComponent<Collider2D>();
+            parrySkill = GetComponent<ParrySkill>();
 
             rigidBody.gravityScale = 0;
             rigidBody.freezeRotation = true;
@@ -91,6 +104,12 @@ namespace LittleSword.Player
 
         protected virtual void Move(Vector2 direction)
         {
+            if (!CanMove)
+            {
+                rigidBody.linearVelocity = Vector2.zero; // ← 입력 씹기
+                return;
+            }
+
             rigidBody.linearVelocity = direction * 3.0f;
             movementController.Move(direction, playerStats.moveSpeed);
             animationController.Move(direction != Vector2.zero);
@@ -109,6 +128,11 @@ namespace LittleSword.Player
         {
             if (IsDead) return;
 
+            if (IsInvincible)
+            {
+                parrySkill?.OnParrySuccess(); // 패링 성공
+                return;
+            }
             CurrentHP = Mathf.Max(0, CurrentHP - damage);
 
             // HP 바 목표값 갱신 (Update에서 부드럽게 줄어듦)
