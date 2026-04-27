@@ -4,6 +4,7 @@ using LittleSword.InputSystem;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using Logger = LittleSword.Common.Logger;
+using Unity.Cinemachine;
 
 public class NetworkPlayer : NetworkBehaviour
 {
@@ -13,6 +14,7 @@ public class NetworkPlayer : NetworkBehaviour
     private Animator animator;
     private SpriteRenderer spriteRenderer;
     private InputHandler inputHandler;
+    private CinemachineCamera cmCamera;
 
     private void Awake()
     {
@@ -21,6 +23,7 @@ public class NetworkPlayer : NetworkBehaviour
         animator = GetComponent<Animator>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         inputHandler = GetComponent<InputHandler>();
+        cmCamera = FindFirstObjectByType<CinemachineCamera>();
     }
 
     public override void OnNetworkSpawn()
@@ -28,6 +31,7 @@ public class NetworkPlayer : NetworkBehaviour
         //Logger.Log($"플레이어 접속 : {IsOwner}, IsServer:{IsServer}, IsClient: {IsClient}, OwnerClientId:{OwnerClientId}");
         if (IsOwner)
         {
+            cmCamera.Follow = transform;
             inputHandler.enabled = true;
             baseplayer.enabled = true;
         }
