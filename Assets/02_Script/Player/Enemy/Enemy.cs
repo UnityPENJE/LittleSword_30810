@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Unity.Netcode;
 
 
 namespace LittleSword.Enemy
@@ -27,7 +28,7 @@ namespace LittleSword.Enemy
     //
     // IDamageable = 피해를 받을 수 있음을 보장하는 인터페이스
     // ============================================================
-    public class Enemy : MonoBehaviour, IDamageable
+    public class Enemy : NetworkBehaviour, IDamageable
     {
         // ─── FSM 관련 ────────────────────────────────────────────
         // 상태 기계 인스턴스
@@ -79,11 +80,18 @@ namespace LittleSword.Enemy
         public LayerMask playerLayer;
 
         // ─── 유니티 생명주기 ─────────────────────────────────────
-
+        NetworkVariable<bool> networkIsFaceingRight = new NetworkVariable<bool>
+            (
+                true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server
+            );
         private void Awake()
         {
             InisState();       // 상태 딕셔너리 초기화
             InitComponents();  // 유니티 컴포넌트 초기화
+            networkIsFaceingRight.OnValueChanged += (value, newValue) =>
+            {
+                spriteRenderer.flipX = !newValue;
+            };
         }
 
         private void Start()
@@ -141,6 +149,8 @@ namespace LittleSword.Enemy
         // 예: enemy.ChangeState<ChaseState>();
         public void ChangeState<T>() where T : IState
         {
+            // 서버에서만 상태 머신 업데이트를 수행함
+            if (!IsServer) return;
             // 죽은 상태에서는 DieState로만 전환 가능 (다른 상태로 못 감)
             if (IsDead && typeof(T) != typeof(DieState)) return;
 
@@ -192,6 +202,8 @@ namespace LittleSword.Enemy
             Vector2 direction = (target.position - transform.position).normalized;
 
             rigidbody.linearVelocity = direction * enemyStats.moveSpeed;
+
+            networkIsFaceingRight.Value = !spriteRenderer.flipX;
         }
 
         // 플레이어 방향으로 스프라이트 반전 (바라보는 방향 설정)
@@ -246,7 +258,10 @@ namespace LittleSword.Enemy
             if (target == null) return;
 
             // 타겟에 IDamageable이 있으면 데미지 적용
-            target.GetComponent<IDamageable>()?.TakeDamage(enemyStats.attackDamage);
+            //target.GetComponent<IDamageable>()?.TakeDamage(enemyStats.attackDamage);
+            ulong targetId = target.GetComponent<NetworkObject>().NetworkObjectId;
+            TakeDamageClientRpc(targetId, enemyStats.attackDamage);
+
             CameraShake.Instance?.Shake();
         }
 

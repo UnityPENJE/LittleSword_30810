@@ -279,13 +279,14 @@ GameObject:
   - component: {fileID: 2851603485021919028}
   - component: {fileID: 5339780449674674078}
   - component: {fileID: 2431700871266932475}
+  - component: {fileID: 5545371635361727155}
   - component: {fileID: 4541275679077616181}
   - component: {fileID: 6867200888328659247}
   - component: {fileID: 2437351782569515370}
   - component: {fileID: 5039829347458198366}
-  - component: {fileID: 5545371635361727155}
   - component: {fileID: 7238628945580369174}
   - component: {fileID: -8902396569865651738}
+  - component: {fileID: -557036163157234697}
   m_Layer: 6
   m_Name: Goblin
   m_TagString: Enemy
@@ -389,6 +390,31 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &5545371635361727155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7493463822869012196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
+  GlobalObjectIdHash: 2361900829
+  InScenePlacedSourceGlobalObjectIdHash: 2361900829
+  DeferredDespawnTick: 0
+  Ownership: 1
+  AlwaysReplicateAsRoot: 0
+  SynchronizeTransform: 1
+  ActiveSceneSynchronization: 0
+  SceneMigrationSynchronization: 0
+  SpawnWithObservers: 1
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+  SyncOwnerTransformWhenParented: 1
+  AllowOwnerToParent: 0
 --- !u!114 &4541275679077616181
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -401,6 +427,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c906b035913089746b7a64bcbd345508, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LittleSword.Enemy.Enemy
+  ShowTopMostFoldoutHeaderGroup: 1
   hpBar: {fileID: 32340497153520760}
   goldReward: 10
   clearUI: {fileID: 0}
@@ -487,31 +514,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LittleSword.UI.DamageTextSpawner
   damageTextPrefab: {fileID: 663848676489080341, guid: 9e0a975420e0d534485e583d0ff9ebe4, type: 3}
   offset: {x: 0, y: 0.5, z: 0}
---- !u!114 &5545371635361727155
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7493463822869012196}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3038294175
-  InScenePlacedSourceGlobalObjectIdHash: 2361900829
-  DeferredDespawnTick: 0
-  Ownership: 1
-  AlwaysReplicateAsRoot: 0
-  SynchronizeTransform: 1
-  ActiveSceneSynchronization: 0
-  SceneMigrationSynchronization: 0
-  SpawnWithObservers: 1
-  DontDestroyWithOwner: 0
-  AutoObjectParentSync: 1
-  SyncOwnerTransformWhenParented: 1
-  AllowOwnerToParent: 0
 --- !u!114 &7238628945580369174
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -575,3 +577,18 @@ MonoBehaviour:
   UseRigidBodyForMotion: 0
   AutoUpdateKinematicState: 1
   AutoSetKinematicOnDespawn: 1
+--- !u!114 &-557036163157234697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7493463822869012196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkAnimator
+  ShowTopMostFoldoutHeaderGroup: 1
+  TransitionStateInfoList: []
+  m_Animator: {fileID: 2431700871266932475}
