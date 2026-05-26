@@ -10,6 +10,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Unity.Netcode;
+using Logger = LittleSword.Common.Logger;
 
 
 namespace LittleSword.Enemy
@@ -260,9 +261,36 @@ namespace LittleSword.Enemy
             // 타겟에 IDamageable이 있으면 데미지 적용
             //target.GetComponent<IDamageable>()?.TakeDamage(enemyStats.attackDamage);
             ulong targetId = target.GetComponent<NetworkObject>().NetworkObjectId;
-            TakeDamageClientRpc(targetId, enemyStats.attackDamage);
-
+            // TakeDamageClientRpc(targetId, enemyStats.attackDamage);
+            TakeDamageRpc(targetId, enemyStats.attackDamage);
+    
             CameraShake.Instance?.Shake();
+        }
+
+        [ClientRpc]
+        public void TakeDamageClientRpc(ulong targetId, int damage)
+        {
+            Logger.Log($"RPC 수신: {targetId} {damage}");
+            if(!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out NetworkObject targetObject))
+            {
+                Logger.Log($"대상 NetworkObjectId({targetId})를 찾을 수 없습니다.");
+                return;
+            }
+
+            targetObject.GetComponent<IDamageable>()?.TakeDamage(damage);
+        }
+
+        [Rpc(SendTo.Everyone)]
+        public void TakeDamageRpc(ulong targetId, int damage)
+        {
+            Logger.Log($"RPC 수신: {targetId} {damage}");
+            if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out NetworkObject targetObject))
+            {
+                Logger.Log($"대상 NetworkObjectId({targetId})를 찾을 수 없습니다.");
+                return;
+            }
+
+            targetObject.GetComponent<IDamageable>()?.TakeDamage(damage);
         }
 
         // IDamageable 인터페이스 구현: 피해 받기
