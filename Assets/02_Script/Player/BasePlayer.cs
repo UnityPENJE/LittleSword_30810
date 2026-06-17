@@ -138,6 +138,7 @@ namespace LittleSword.Player
 
             // HP 바 목표값 갱신 (Update에서 부드럽게 줄어듦)
             targetHpFill = (float)CurrentHP / playerStats.maxHP;
+            OnHPChanged?.Invoke(CurrentHP, playerStats.maxHP);
 
             if (IsDead)
             {
@@ -156,6 +157,7 @@ namespace LittleSword.Player
             if (IsDead) return;
             CurrentHP = Mathf.Min(CurrentHP + amount, playerStats.maxHP);
             targetHpFill = (float)CurrentHP / playerStats.maxHP;
+            OnHPChanged?.Invoke(CurrentHP, playerStats.maxHP);
         }
 
         void Die()

@@ -322,9 +322,15 @@ namespace LittleSword.Enemy
             {
                 clearUI?.SetActive(true);
             }
-            
-            CurrencyManager.Instance?.Add(goldReward);
-            ChangeState<DieState>(); // DieState에서 애니메이션, 충돌 비활성화, 오브젝트 제거 처리
+
+            // 타겟 플레이어에게 골드 지급 (서버에서만 처리)
+            if (IsServer && target != null)
+            {
+                var networkPlayer = target.GetComponent<NetworkPlayer>();
+                networkPlayer?.AddGold(goldReward);
+            }
+
+            ChangeState<DieState>();
         }
     }
 }

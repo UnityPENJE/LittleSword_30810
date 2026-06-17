@@ -6,24 +6,34 @@ namespace LittleSword.UI
     public class ShopUI : MonoBehaviour
     {
         [SerializeField] private TextMeshProUGUI goldText;
-        
 
-        private void Start()
+        private NetworkPlayer subscribedPlayer;
+
+        private void OnEnable()
         {
-            if (CurrencyManager.Instance == null) return;
-            CurrencyManager.Instance.OnGoldChanged += UpdateGoldUI;
-            UpdateGoldUI(CurrencyManager.Instance.Gold);
+            NetworkPlayer.OnLocalPlayerSpawned += OnPlayerSpawned;
+
+            if (NetworkPlayer.LocalPlayer != null)
+                OnPlayerSpawned(NetworkPlayer.LocalPlayer);
         }
 
         private void OnDisable()
         {
-            if (CurrencyManager.Instance != null)
-                CurrencyManager.Instance.OnGoldChanged -= UpdateGoldUI;
+            NetworkPlayer.OnLocalPlayerSpawned -= OnPlayerSpawned;
+            if (subscribedPlayer != null)
+                subscribedPlayer.OnGoldChanged -= UpdateGoldUI;
+        }
+
+        private void OnPlayerSpawned(NetworkPlayer player)
+        {
+            if (subscribedPlayer != null)
+                subscribedPlayer.OnGoldChanged -= UpdateGoldUI;
+
+            subscribedPlayer = player;
+            subscribedPlayer.OnGoldChanged += UpdateGoldUI;
+            UpdateGoldUI(subscribedPlayer.Gold);
         }
 
         private void UpdateGoldUI(int gold) => goldText.text = $"{gold}";
-
-
-        
     }
 }

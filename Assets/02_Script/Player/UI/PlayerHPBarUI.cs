@@ -5,19 +5,31 @@ using LittleSword.Player;
 namespace LittleSword.UI
 {
     // ============================================================
-    // PlayerHPBarUI: È­¸é¿¡ °íÁ¤µÈ ÇÃ·¹ÀÌ¾î HP ¹Ù
+    // PlayerHPBarUI: È­ï¿½é¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ HP ï¿½ï¿½
     // ============================================================
-    // Canvas(Screen Space Overlay) ¾Æ·¡ Image µÎ °³·Î ±¸¼º:
-    //   - ¹è°æ Image (È¸»ö)
-    //   - Fill Image (»¡°­, Image Type = Filled, Fill Method = Horizontal)
+    // Canvas(Screen Space Overlay) ï¿½Æ·ï¿½ Image ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:
+    //   - ï¿½ï¿½ï¿½ Image (È¸ï¿½ï¿½)
+    //   - Fill Image (ï¿½ï¿½ï¿½ï¿½, Image Type = Filled, Fill Method = Horizontal)
     // ============================================================
     public class PlayerHPBarUI : MonoBehaviour
     {
-        [SerializeField] private BasePlayer player;     // ÃßÀûÇÒ ÇÃ·¹ÀÌ¾î
-        [SerializeField] private Image hpFillImage;     // fillAmount·Î HP Ç¥½Ã
-        [SerializeField] private float lerpSpeed = 5f;  // HP °¨¼Ò ¾Ö´Ï¸ŞÀÌ¼Ç ¼Óµµ
+        [SerializeField] private BasePlayer player;
+        [SerializeField] private Image hpFillImage;
+        [SerializeField] private float lerpSpeed = 5f;
 
-        private float targetFill = 1f; // ¸ñÇ¥ fillAmount (½ÇÁ¦ HP ºñÀ²)
+        private float targetFill = 1f;
+
+        // NetworkPlayer.OnNetworkSpawn()ì—ì„œ í˜¸ì¶œí•´ ë¡œì»¬ í”Œë ˆì´ì–´ ì—°ê²°
+        public void SetPlayer(BasePlayer newPlayer)
+        {
+            if (player != null) player.OnHPChanged -= UpdateHP;
+            player = newPlayer;
+            if (player != null)
+            {
+                player.OnHPChanged += UpdateHP;
+                UpdateHP(player.CurrentHP, player.playerStats.maxHP);
+            }
+        }
 
         private void OnEnable()
         {
@@ -31,7 +43,6 @@ namespace LittleSword.UI
 
         private void Update()
         {
-            // ºÎµå·´°Ô °¨¼Ò
             hpFillImage.fillAmount = Mathf.Lerp(hpFillImage.fillAmount, targetFill, Time.deltaTime * lerpSpeed);
         }
 

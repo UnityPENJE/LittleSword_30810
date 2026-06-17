@@ -465,3 +465,65 @@ Enemy (Enemy 스크립트)
 - **캐릭터 잔상/뚝뚝 끊김** → Player의 Rigidbody2D → Interpolate를 `Interpolate`로 변경. 카메라 SmoothTime은 0.05 정도가 적당.
 - **체력바 안 줄어듦** → 인스펙터에서 `Hp Fill Image` 슬롯에 Fill 이미지가 드래그 됐는지 확인. Image Type=Filled, Fill Method=Horizontal 필수.
 - **`Enemy is namespace but used like type`** → `LittleSword.Enemy.Enemy` 전체 경로로 명시.
+
+---
+
+## 9. 멀티플레이어 UI 분리 (플레이어별 독립 HP바·골드·상점)
+
+### 변경 목적
+2인 멀티(Unity Netcode for GameObjects) 환경에서 HP바, 골드 UI, 상점 구매를 플레이어별로 완전히 분리.
+
+### 변경 파일 및 내용
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `Network/NetworkPlayer.cs` | `LocalPlayer` 정적 참조 추가, `networkGold` NetworkVariable, `AddGold()` / `SpendGoldServerRpc()`, 스폰 시 HP바·골드UI 자동 연결 |
+| `Player/UI/PlayerHPBarUI.cs` | `SetPlayer(BasePlayer)` 메서드 추가 → NetworkPlayer가 스폰 시 자동 연결 |
+| `Player/BasePlayer.cs` | `TakeDamage()` / `Heal()`에서 `OnHPChanged` 이벤트 발화 추가 |
+| `UI/GoldUI.cs` | `CurrencyManager` 싱글톤 대신 `NetworkPlayer.LocalPlayer` 골드 구독 |
+| `UI/ShopUI.cs` | 동일 — 로컬 플레이어 골드 표시 |
+| `UI/ShopSlotUI.cs` | 로컬 플레이어 골드로 구매, PlayerPrefs 키를 `{clientId}_{itemKey}` 형태로 분리 |
+| `Player/Enemy/Enemy.cs` | `Die()`에서 `CurrencyManager` 대신 타겟 `NetworkPlayer.AddGold()` 호출 |
+
+### 동작 방식
+
+```
+플레이어 스폰 (OnNetworkSpawn)
+  └─ IsOwner인 경우
+       ├─ NetworkPlayer.LocalPlayer = this
+       ├─ PlayerHPBarUI.SetPlayer(baseplayer) 자동 연결
+       └─ OnLocalPlayerSpawned 이벤트 발행
+            ├─ GoldUI 구독 → 내 골드만 표시
+            └─ ShopUI 구독 → 내 골드만 표시
+
+적 처치 (Enemy.Die)
+  └─ IsServer && target != null
+       └─ target의 NetworkPlayer.AddGold(goldReward) 호출
+            └─ NetworkVariable<int> networkGold 서버에서 차감/증가
+                 └─ 각 클라이언트 UI 자동 동기화
+
+상점 구매 (ShopSlotUI.OnBuy)
+  ├─ NetworkPlayer.LocalPlayer.Gold >= price 로컬 검증
+  ├─ SpendGoldServerRpc(price) 서버 차감 요청
+  └─ PlayerPrefs 키: "{clientId}_{itemKey}" (같은 PC 테스트도 분리)
+```
+
+### 골드 NetworkVariable 구조
+
+```csharp
+// NetworkPlayer.cs
+NetworkVariable<int> networkGold = new NetworkVariable<int>(
+    0,
+    NetworkVariableReadPermission.Everyone,   // 모두 읽기 가능
+    NetworkVariableWritePermission.Server     // 서버만 쓰기 가능
+);
+```
+
+### 어태치 변경사항
+
+| 항목 | 이전 | 이후 |
+|------|------|------|
+| GoldUI 골드 참조 | `CurrencyManager.Instance` (전역) | `NetworkPlayer.LocalPlayer` (로컬) |
+| ShopUI 골드 참조 | `CurrencyManager.Instance` (전역) | `NetworkPlayer.LocalPlayer` (로컬) |
+| PlayerHPBarUI 플레이어 참조 | 인스펙터 직접 드래그 | 런타임 자동 연결 (`SetPlayer`) |
+| 적 처치 골드 | 전역 싱글톤 CurrencyManager | 타겟 플레이어 NetworkPlayer |

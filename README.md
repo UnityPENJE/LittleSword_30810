@@ -35,3 +35,7 @@ Assets/
 - 플레이어 감지 및 추적 시스템
 - 애니메이션 컨트롤러
 - ScriptableObject 기반 스탯 관리
+- Unity Netcode for GameObjects 기반 2인 멀티플레이어
+  - 플레이어별 독립 HP바, 골드 UI, 상점 구매
+  - NetworkVariable 기반 골드·HP 동기화
+  - Unity Relay / Lobby 서비스 연동 (온라인 매칭)
