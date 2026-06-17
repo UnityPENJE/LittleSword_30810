@@ -384,16 +384,23 @@ namespace LittleSword.Network.LobbyUI
 
         private async void GameStart()
         {
-            try
-            {
-                // 호스트가 호출하면 NetworkManager의 씬 매니저를 통해 모든 클라이언트에 씬 전환을 동기화합니다.
-                // LoadSceneMode.Single은 현재 씬을 대체하여 단일 씬으로 로드합니다.
-                NetworkManager.Singleton.SceneManager.LoadScene(BATTLE_SCENE_NAME, LoadSceneMode.Single);
-            }
-            catch (Exception e)
-            {
-                Logger.logError(e.Message);
-            }
+            //try
+            //{
+            //    // 호스트가 호출하면 NetworkManager의 씬 매니저를 통해 모든 클라이언트에 씬 전환을 동기화합니다.
+            //    // LoadSceneMode.Single은 현재 씬을 대체하여 단일 씬으로 로드합니다.
+            //    NetworkManager.Singleton.SceneManager.LoadScene(BATTLE_SCENE_NAME, LoadSceneMode.Single);
+            //}
+            //catch (Exception e)
+            //{
+            //    Logger.logError(e.Message);
+            //}
+            if (!Ishost) return;
+
+            // 연결된 클라이언트 확인 (최소 인원 체크 등)
+            int connected = NetworkManager.Singleton.ConnectedClients.Count;
+            Logger.Log($"현재 연결된 클라이언트 수: {connected}");
+
+            NetworkManager.Singleton.SceneManager.LoadScene(BATTLE_SCENE_NAME, LoadSceneMode.Single);
         }
         #endregion
     }
