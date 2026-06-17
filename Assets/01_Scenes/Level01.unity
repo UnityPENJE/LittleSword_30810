@@ -5136,7 +5136,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LittleSword.UI.ShopSlotUI
   itemKey: Dash
   price: 40
-  skillObject: {fileID: 0}
   buyButton: {fileID: 823340134}
 --- !u!1 &1003354796
 GameObject:
@@ -5713,7 +5712,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LittleSword.UI.ShopSlotUI
   itemKey: Parry
   price: 20
-  skillObject: {fileID: 0}
   buyButton: {fileID: 1387485004}
 --- !u!1 &1195400902
 GameObject:

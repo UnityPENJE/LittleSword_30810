@@ -2,29 +2,32 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using LittleSword.Effects;
+using Unity.Netcode;
 
 namespace LittleSword.Player
 {
     public class ParrySkill : MonoBehaviour
     {
-        [Header("ÆĞ¸µ ¼³Á¤")]
+        [Header("ï¿½Ğ¸ï¿½ ï¿½ï¿½ï¿½ï¿½")]
         [SerializeField] private GameObject parryEffect;
         [SerializeField] private float parryDuration = 0.4f;
         [SerializeField] private float cooldown = 2f;
 
-        [Header("ÄğÅ¸ÀÓ UI")]
+        [Header("ï¿½ï¿½Å¸ï¿½ï¿½ UI")]
         [SerializeField] private Image cooldownImage;
 
-        [Header("ÆĞ¸µ ¼º°ø È¿°ú")]
-        [SerializeField] private Image flashImage;  // ÀüÃ¼È­¸é Èò»ö Image (¾ËÆÄ 0À¸·Î ½ÃÀÛ)
+        [Header("ï¿½Ğ¸ï¿½ ï¿½ï¿½ï¿½ï¿½ È¿ï¿½ï¿½")]
+        [SerializeField] private Image flashImage;  // ï¿½ï¿½Ã¼È­ï¿½ï¿½ ï¿½ï¿½ï¿½ Image (ï¿½ï¿½ï¿½ï¿½ 0ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         [SerializeField] private float flashDuration = 0.2f;
 
         private bool isCooldown;
         private BasePlayer player;
+        private NetworkPlayer networkPlayer;
 
         private void Awake()
         {
             player = GetComponentInParent<BasePlayer>();
+            networkPlayer = GetComponentInParent<NetworkPlayer>();
             parryEffect.SetActive(false);
             if (cooldownImage) cooldownImage.fillAmount = 0f;
             if (flashImage) flashImage.color = new Color(1, 1, 1, 0);
@@ -40,12 +43,19 @@ namespace LittleSword.Player
         {
             isCooldown = true;
             parryEffect.SetActive(true);
-            player.IsInvincible = true;
+            // ë©€í‹°: ì„œë²„ì—ë„ ë¬´ì  ìƒíƒœ ë™ê¸°í™”, ì‹±ê¸€: ì§ì ‘ ì„¤ì •
+            if (networkPlayer != null)
+                networkPlayer.SetInvincibleServerRpc(true);
+            else
+                player.IsInvincible = true;
 
             yield return new WaitForSeconds(parryDuration);
 
             parryEffect.SetActive(false);
-            player.IsInvincible = false;
+            if (networkPlayer != null)
+                networkPlayer.SetInvincibleServerRpc(false);
+            else
+                player.IsInvincible = false;
 
             float elapsed = 0f;
             while (elapsed < cooldown)
@@ -59,7 +69,7 @@ namespace LittleSword.Player
             isCooldown = false;
         }
 
-        // BasePlayer.TakeDamage¿¡¼­ ¹«Àû Áß µ¥¹ÌÁö ¹ŞÀ¸¸é È£Ãâ
+        // BasePlayer.TakeDamageï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½
         public void OnParrySuccess()
         {
             CameraShake.Instance?.Shake();

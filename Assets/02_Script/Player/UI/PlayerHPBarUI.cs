@@ -1,49 +1,39 @@
 using UnityEngine;
 using UnityEngine.UI;
-using LittleSword.Player;
 
 namespace LittleSword.UI
 {
-    // ============================================================
-    // PlayerHPBarUI: ȭ�鿡 ������ �÷��̾� HP ��
-    // ============================================================
-    // Canvas(Screen Space Overlay) �Ʒ� Image �� ���� ����:
-    //   - ��� Image (ȸ��)
-    //   - Fill Image (����, Image Type = Filled, Fill Method = Horizontal)
-    // ============================================================
+    // 플레이어 프리팹 안에 있는 HP 바 UI
+    // 같은 프리팹의 NetworkPlayer에서 HP 변경 이벤트를 직접 받음
     public class PlayerHPBarUI : MonoBehaviour
     {
-        [SerializeField] private BasePlayer player;
         [SerializeField] private Image hpFillImage;
         [SerializeField] private float lerpSpeed = 5f;
 
         private float targetFill = 1f;
+        private NetworkPlayer networkPlayer;
 
-        // NetworkPlayer.OnNetworkSpawn()에서 호출해 로컬 플레이어 연결
-        public void SetPlayer(BasePlayer newPlayer)
+        private void Awake()
         {
-            if (player != null) player.OnHPChanged -= UpdateHP;
-            player = newPlayer;
-            if (player != null)
-            {
-                player.OnHPChanged += UpdateHP;
-                UpdateHP(player.CurrentHP, player.playerStats.maxHP);
-            }
+            networkPlayer = GetComponentInParent<NetworkPlayer>();
         }
 
         private void OnEnable()
         {
-            if (player != null) player.OnHPChanged += UpdateHP;
+            if (networkPlayer != null)
+                networkPlayer.OnHPChanged += UpdateHP;
         }
 
         private void OnDisable()
         {
-            if (player != null) player.OnHPChanged -= UpdateHP;
+            if (networkPlayer != null)
+                networkPlayer.OnHPChanged -= UpdateHP;
         }
 
         private void Update()
         {
-            hpFillImage.fillAmount = Mathf.Lerp(hpFillImage.fillAmount, targetFill, Time.deltaTime * lerpSpeed);
+            if (hpFillImage != null)
+                hpFillImage.fillAmount = Mathf.Lerp(hpFillImage.fillAmount, targetFill, Time.deltaTime * lerpSpeed);
         }
 
         private void UpdateHP(int current, int max)

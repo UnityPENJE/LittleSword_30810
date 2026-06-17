@@ -151,6 +151,14 @@ namespace LittleSword.Player
             }
         }
 
+        // NetworkPlayer에서 호출 - targetHpFill 동기화 (멀티플레이어용)
+        public void SetHPFill(float fill)
+        {
+            targetHpFill = fill;
+            if (hpFillImage != null)
+                hpFillImage.fillAmount = fill; // Lerp 충돌 방지 - 즉시 적용
+        }
+
         // 체력 회복 (필요할 때 사용)
         public void Heal(int amount)
         {
@@ -168,7 +176,27 @@ namespace LittleSword.Player
             rigidBody.linearVelocity = Vector2.zero;
             string currentSceneName = SceneManager.GetActiveScene().name;
             SceneManager.LoadScene(currentSceneName);
+        }
 
+        // NetworkPlayer에서 호출 - 피격 애니메이션 재생
+        public void PlayHitAnimation()
+        {
+            if (IsDead) return;
+            CameraShake.Instance?.Shake();
+            animationController.Hit();
+        }
+
+        // NetworkPlayer에서 호출 - 사망 처리
+        public void TriggerDie()
+        {
+            if (!IsDead) return;
+            Die();
+        }
+
+        // NetworkPlayer에서 호출 - 패링 처리
+        public void HandleParry()
+        {
+            parrySkill?.OnParrySuccess();
         }
     }
 }

@@ -29,6 +29,14 @@ public class NetworkPlayer : NetworkBehaviour
     public int Gold => networkGold.Value;
     public event System.Action<int> OnGoldChanged;
 
+    // 플레이어 HP (서버 권위적, 전체 동기화)
+    private NetworkVariable<int> networkHP = new NetworkVariable<int>(
+        0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    public int HP => networkHP.Value;
+    public int MaxHP => baseplayer != null ? baseplayer.playerStats.maxHP : 0;
+    public event System.Action<int, int> OnHPChanged; // current, max
+
     // 로컬 플레이어 스폰 시 UI가 구독할 수 있도록 알림
     public static event System.Action<NetworkPlayer> OnLocalPlayerSpawned;
 
@@ -71,6 +79,11 @@ public class NetworkPlayer : NetworkBehaviour
     {
         networkIsFacingRight.OnValueChanged += OnFacingRighChanged;
         networkGold.OnValueChanged += (_, newVal) => OnGoldChanged?.Invoke(newVal);
+        networkHP.OnValueChanged += OnNetworkHPChanged;
+
+        // 서버가 HP 초기값 설정
+        if (IsServer)
+            networkHP.Value = baseplayer.playerStats.maxHP;
 
         if (IsOwner)
         {
@@ -80,13 +93,16 @@ public class NetworkPlayer : NetworkBehaviour
             inputHandler.enabled = true;
             baseplayer.enabled = true;
 
-            // HP바 자동 연결
-            var hpBar = FindFirstObjectByType<PlayerHPBarUI>();
-            hpBar?.SetPlayer(baseplayer);
+            // HP바는 PlayerHPBarUI가 GetComponentInParent로 직접 이 NetworkPlayer를 찾아 구독함
 
             // 골드 UI에 스폰 알림
             OnLocalPlayerSpawned?.Invoke(this);
             OnGoldChanged?.Invoke(networkGold.Value);
+
+            // 현재 HP 동기화 및 UI 초기화
+            baseplayer.CurrentHP = networkHP.Value;
+            baseplayer.SetHPFill((float)networkHP.Value / baseplayer.playerStats.maxHP);
+            OnHPChanged?.Invoke(networkHP.Value, baseplayer.playerStats.maxHP);
         }
         else
         {
@@ -95,6 +111,39 @@ public class NetworkPlayer : NetworkBehaviour
             inputHandler.enabled = false;
             baseplayer.enabled = false;
         }
+    }
+
+    // networkHP 변경 시 모든 클라이언트에서 호출됨
+    private void OnNetworkHPChanged(int prev, int current)
+    {
+        baseplayer.CurrentHP = current;
+        baseplayer.SetHPFill((float)current / baseplayer.playerStats.maxHP);
+        baseplayer.OnHPChanged?.Invoke(current, baseplayer.playerStats.maxHP);
+        // PlayerHPBarUI가 직접 구독하는 이벤트
+        OnHPChanged?.Invoke(current, baseplayer.playerStats.maxHP);
+
+        if (current <= 0 && prev > 0)
+        {
+            // 씬 리로드는 해당 플레이어 본인 클라이언트에서만 실행
+            if (IsOwner)
+                baseplayer.TriggerDie();
+        }
+        else if (current < prev)
+        {
+            baseplayer.PlayHitAnimation();
+        }
+    }
+
+    // 서버에서만 호출 가능 - 적이 플레이어에게 데미지 입힐 때 사용
+    public void ApplyDamage(int damage)
+    {
+        if (!IsServer) return;
+        if (baseplayer.IsInvincible)
+        {
+            baseplayer.HandleParry();
+            return;
+        }
+        networkHP.Value = Mathf.Max(0, networkHP.Value - damage);
     }
 
     public override void OnNetworkDespawn()
@@ -116,6 +165,13 @@ public class NetworkPlayer : NetworkBehaviour
     {
         if (!IsServer) return;
         networkGold.Value += amount;
+    }
+
+    // 패링 등 무적 상태를 서버에 동기화 (오너 클라이언트 → 서버)
+    [ServerRpc(RequireOwnership = true)]
+    public void SetInvincibleServerRpc(bool value)
+    {
+        baseplayer.IsInvincible = value;
     }
 
     // 클라이언트가 구매 요청 → 서버에서 차감

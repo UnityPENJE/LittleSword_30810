@@ -141,6 +141,13 @@ namespace LittleSword.Enemy
 
             // 시작 시 HP를 최대값으로 설정
             CurrentHP = enemyStats.maxHP;
+
+            // 플레이어 물리 충돌로 적이 밀리지 않도록 레이어 충돌 무시
+            for (int i = 0; i < 32; i++)
+            {
+                if ((playerLayer.value & (1 << i)) != 0)
+                    Physics2D.IgnoreLayerCollision(gameObject.layer, i);
+            }
         }
 
         // ─── 상태 전환 ────────────────────────────────────────────
@@ -254,43 +261,18 @@ namespace LittleSword.Enemy
         }
 
         // 애니메이션 이벤트에서 호출 - 공격 판정이 들어가는 순간에 실행
+        // 서버에서만 실행되며 NetworkPlayer.ApplyDamage를 통해 HP를 동기화함
         public void OnAttackAnimationEvent()
         {
-            if (target == null) return;
+            if (!IsServer || target == null) return;
 
-            // 타겟에 IDamageable이 있으면 데미지 적용
-            //target.GetComponent<IDamageable>()?.TakeDamage(enemyStats.attackDamage);
-            ulong targetId = target.GetComponent<NetworkObject>().NetworkObjectId;
-            // TakeDamageClientRpc(targetId, enemyStats.attackDamage);
-            TakeDamageRpc(targetId, enemyStats.attackDamage);
-    
+            // NetworkPlayer를 같은 오브젝트나 부모에서 찾음
+            var networkPlayer = target.GetComponent<NetworkPlayer>()
+                             ?? target.GetComponentInParent<NetworkPlayer>();
+            if (networkPlayer == null) return;
+
+            networkPlayer.ApplyDamage(enemyStats.attackDamage);
             CameraShake.Instance?.Shake();
-        }
-
-        [ClientRpc]
-        public void TakeDamageClientRpc(ulong targetId, int damage)
-        {
-            Logger.Log($"RPC 수신: {targetId} {damage}");
-            if(!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out NetworkObject targetObject))
-            {
-                Logger.Log($"대상 NetworkObjectId({targetId})를 찾을 수 없습니다.");
-                return;
-            }
-
-            targetObject.GetComponent<IDamageable>()?.TakeDamage(damage);
-        }
-
-        [Rpc(SendTo.Everyone)]
-        public void TakeDamageRpc(ulong targetId, int damage)
-        {
-            Logger.Log($"RPC 수신: {targetId} {damage}");
-            if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(targetId, out NetworkObject targetObject))
-            {
-                Logger.Log($"대상 NetworkObjectId({targetId})를 찾을 수 없습니다.");
-                return;
-            }
-
-            targetObject.GetComponent<IDamageable>()?.TakeDamage(damage);
         }
 
         // IDamageable 인터페이스 구현: 피해 받기
